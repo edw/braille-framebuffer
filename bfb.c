@@ -29,6 +29,7 @@ extern int init_bfb(
   bfb *b,
   int w_dots, int h_dots,
   unsigned short default_block) {
+  
   b->width = (w_dots+1)>>1;
   b->height = (h_dots+3)>>2;
   b->blocks = malloc(b->width * b->height * sizeof(unsigned short));
@@ -79,6 +80,7 @@ extern void bfb_resolve_pt(bfb_pt *pt) {
 extern void bfb_plot(bfb *b, int x, int y, int is_on) {
   bfb_pt pt = { x, y };
   bfb_resolve_pt(&pt);
+  
   if ((pt.char_col >= 0)
       && (pt.char_col < b->width)
       && (pt.char_row >= 0)
@@ -92,8 +94,10 @@ extern void bfb_plot(bfb *b, int x, int y, int is_on) {
 }
 
 int bfb_isset(bfb *b, int x, int y) {
+  
   bfb_pt pt = { x, y };
   bfb_resolve_pt(&pt);
+  
   if ((pt.char_col >= 0)
       && (pt.char_col < b->width)
       && (pt.char_row >= 0)
