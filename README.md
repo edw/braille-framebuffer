@@ -1,11 +1,13 @@
 # A Braille Unicode Framebuffer for the Terminal
 
+## Building
+
 ```
 make demo
 ./demo
 ```
 
-Things on the to-do list:
+## To-do
 
 * Allow a chunk to be colored or have another terminal effect applied
   to it e.g. inverse or bold.
@@ -14,7 +16,7 @@ Things on the to-do list:
 
 * Routines to place text overlays and lines atop the image.
 
-## Using brb.c
+## Using bfb.c
 
 The interface is extremely straightforward. You should be able to do
 whatever you want with the following routines:
@@ -53,3 +55,9 @@ Set the "pixel" at (x,y) to either "white" or "black" based on whether
 `is_on` is true or not.
 
 That's about it. Pull requests welcome.
+
+## Motivation
+
+The subject of text graphics have been coming up on Hacker News a lot
+recently, and I thought it would be fun to create a little library for
+drawing inside the terminal.
