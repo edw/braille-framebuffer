@@ -1,5 +1,7 @@
 # A Braille Unicode Framebuffer Library for the Terminal in C89
 
+![A screenshot of my iPad running the demo in Blink shell](https://poseur.com/blink-tmux-braille.png)
+
 ## Building
 
 ```
