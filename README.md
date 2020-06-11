@@ -46,8 +46,8 @@ Output the framebuffer to `fp` using UTF-8 and ANSI escape sequences.
 `void bfb_home(bfb *b, FILE *fp)`
 
 Send ANSI escape code contortions to return the terminal cursor to a
-location so that repeated calls to `bfb_put` will exactly overprint
-each other.
+location so that repeated sequences of `bfb_fput()` and `bfb_home()`
+will exactly overprint each other.
 
 `void bfb_plot(bfb *b, int x, int y, int is_on)`
 
