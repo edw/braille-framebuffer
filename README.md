@@ -16,6 +16,8 @@ make demo
 
 * Routines to place text overlays and lines atop the image.
 
+* `bfb_isset(b, x, y)` routine to test whether pixel is on or off.
+
 ## Using bfb.c
 
 The interface is extremely straightforward. You should be able to do
