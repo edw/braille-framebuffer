@@ -34,8 +34,7 @@ static struct winsize get_winsize() {
 }
 
 static void seed(bfb *fb) {
-  /* Randomly set 20% of the cells. */
-  int n = (int)(fb->width * fb->height * 8 * 0.05);
+  int n = (int)(fb->width * fb->height * 8 * 0.10);
 
   do {
     int x = rand() % (fb->width * 2);
@@ -63,7 +62,7 @@ extern int main(int argc, char **argv) {
   struct winsize w = get_winsize();
   int width = (w.ws_col-1)*2, height = (w.ws_row-1)*4;
   bfb fb, fb2;
-  bfb *current_fb = &fb, *next_fb = &fb, *temp_fb;
+  bfb *current_fb = &fb, *next_fb = &fb2, *temp_fb;
   int x, y;
 
   init_bfb(&fb, width, height, 0x0);
