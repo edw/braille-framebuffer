@@ -45,5 +45,6 @@ void bfb_home(bfb *b, FILE *fp);
 void bfb_fput(bfb *b, FILE *fp);
 void bfb_resolve_pt(bfb_pt *pt);
 void bfb_plot(bfb *b, int x, int y, int is_on);
+int bfb_isset(bfb *b, int x, int y);
 
 #endif

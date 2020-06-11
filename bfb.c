@@ -90,3 +90,17 @@ extern void bfb_plot(bfb *b, int x, int y, int is_on) {
           b->blocks[pt.char_row * b->width + pt.char_col] &= pt.mask ^ 0xff;
   }
 }
+
+int bfb_isset(bfb *b, int x, int y) {
+  bfb_pt pt = { x, y };
+  bfb_resolve_pt(&pt);
+  if ((pt.char_col >= 0)
+      && (pt.char_col < b->width)
+      && (pt.char_row >= 0)
+      && (pt.char_row < b->height)) {
+
+    return ((b->blocks[pt.char_row * b->width + pt.char_col] & pt.mask) != 0);
+  } else {
+    return 0;
+  }
+}

@@ -33,36 +33,66 @@ static struct winsize get_winsize() {
   return w;
 }
 
+static void seed(bfb *fb) {
+  /* Randomly set 20% of the cells. */
+  int n = (int)(fb->width * fb->height * 8 * 0.05);
+
+  do {
+    int x = rand() % (fb->width * 2);
+    int y = rand() % (fb->height * 4);
+    if (bfb_isset(fb, x, y))
+      continue;
+
+    n--;
+    bfb_plot(fb, x, y, 1);
+  } while (n > 0);
+}
+
+int neighbors(bfb *fb, int x, int y) {
+  return (bfb_isset(fb, x-1, y-1)
+          + bfb_isset(fb, x-1, y)
+          + bfb_isset(fb, x-1, y+1)
+          + bfb_isset(fb, x, y-1)
+          + bfb_isset(fb, x, y+1)
+          + bfb_isset(fb, x+1, y-1)
+          + bfb_isset(fb, x+1, y)
+          + bfb_isset(fb, x+1, y+1));
+}
+
 extern int main(int argc, char **argv) {
   struct winsize w = get_winsize();
   int width = (w.ws_col-1)*2, height = (w.ws_row-1)*4;
-  bfb bm;
-  double theta;
-  double r = (double)height * 0.45;
-  double aspect = (double)width/(double)height;
-  double xc = (double)width/2, yc = (double)height/2;
-  int steps = 5000;
-  int loops = 10;
-  double decay = 99.95e-2;
-  int i;
+  bfb fb, fb2;
+  bfb *current_fb = &fb, *next_fb = &fb, *temp_fb;
   int x, y;
 
-  init_bfb(&bm, width, height, 0xff);
+  init_bfb(&fb, width, height, 0x0);
+  init_bfb(&fb2, width, height, 0x0);
 
-  bfb_fput(&bm, stdout);
+  seed(current_fb);
 
-  for (i = 0; i < steps; i++) {
-    theta = 2.0 * M_PI * ((double)i/((double)steps/(double)loops));
-    r *= decay;
-    x = (int)(aspect*r*cos(theta) + xc);
-    y = (int)(r*sin(theta) + yc);
-    bfb_plot(&bm, x, y, 0);
+  bfb_fput(current_fb, stdout);
 
-    bfb_home(&bm, stdout); /* repainting on each interation is brutal */
-    bfb_fput(&bm, stdout); /* performance-wise; thank your lucky stars */
-    fflush(stdout);        /* you're not using a 110 baud modem. */
+  while(1) {
+    for(x=0; x<width; x++) {
+      for(y=0; y<height; y++) {
+        int n = neighbors(current_fb, x, y);
+        if(bfb_isset(current_fb, x, y))
+          bfb_plot(next_fb, x, y, (n == 2) || (n == 3));
+        else
+          bfb_plot(next_fb, x, y, (n == 3));
+      }
+    }
+    bfb_home(current_fb, stdout);
+    bfb_fput(current_fb, stdout);
+    fflush(stdout);
+
+    temp_fb = current_fb;
+    current_fb = next_fb;
+    next_fb = temp_fb;
   }
-  free_bfb(&bm);
 
+  free_bfb(&fb);
+  free_bfb(&fb2);
   return EXIT_SUCCESS;
 }

@@ -16,8 +16,6 @@ make demo
 
 * Routines to place text overlays and lines atop the image.
 
-* `bfb_isset(b, x, y)` routine to test whether pixel is on or off.
-
 ## Using bfb.c
 
 The interface is extremely straightforward. You should be able to do
@@ -55,6 +53,10 @@ will exactly overprint each other.
 
 Set the "pixel" at (x,y) to either "white" or "black" based on whether
 `is_on` is true or not.
+
+`int bfb_isset(bfb *b, int x, int y)`
+
+Returns true if the pixel at (x,y) is "white."
 
 That's about it. Pull requests welcome.
 
