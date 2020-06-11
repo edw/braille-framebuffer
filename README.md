@@ -1,4 +1,4 @@
-# A Braille Unicode Framebuffer for the Terminal
+# A Braille Unicode Framebuffer Library for the Terminal in C89
 
 ## Building
 
