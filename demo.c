@@ -33,8 +33,8 @@ static struct winsize get_winsize() {
   return w;
 }
 
-static void seed(bfb *fb) {
-  int n = (int)(fb->width * fb->height * 8 * 0.10);
+static void seed(bfb *fb, double density) {
+  int n = (int)(fb->width * fb->height * 8 * density);
 
   do {
     int x = rand() % (fb->width * 2);
@@ -58,6 +58,20 @@ int neighbors(bfb *fb, int x, int y) {
           + bfb_isset(fb, x+1, y+1));
 }
 
+static double get_density(int argc, char **argv) {
+  double percentage = 0;
+
+  if (argc == 1) return 0.1;
+
+  percentage = atof(argv[1]) / 100.0;
+
+  if (percentage < 0.0) return 0.1;
+
+  if (percentage >= 100.0) return 1.0;
+
+  return percentage;
+}
+
 extern int main(int argc, char **argv) {
   struct winsize w = get_winsize();
   int width = (w.ws_col-1)*2, height = (w.ws_row-1)*4;
@@ -68,7 +82,7 @@ extern int main(int argc, char **argv) {
   init_bfb(&fb, width, height, 0x0);
   init_bfb(&fb2, width, height, 0x0);
 
-  seed(current_fb);
+  seed(current_fb, get_density(argc, argv));
 
   bfb_fput(current_fb, stdout);
 
