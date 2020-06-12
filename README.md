@@ -2,6 +2,8 @@
 
 ![A screenshot of my iPad running the demo in Blink shell](https://poseur.com/color-life-screenshot.png)
 
+Fun fact: if you set your terminal to 141 by 49, your terminal will, compared to an Apple II+, have the same resolution, far more colors, and a slightly different set of rules constraining their use.
+
 ## Building
 
 ```
