@@ -51,9 +51,7 @@ extern void bfb_clear(bfb *b, unsigned short block_value) {
     bfb_block *block = &b->blocks[i];
 
     block->pattern = block_value;
-    block->fg_color = 7;
-    block->bg_color = 0;
-    block->weight = BFB_NORMAL;
+    block->sgr = 0;
   }
 }
 
@@ -69,21 +67,7 @@ extern void bfb_fput(bfb *b, FILE *fp) {
       size_t offset = row*b->width + col;
       bfb_block *block = &b->blocks[offset];
 
-      fprintf(fp, "\x1b[38;5;%dm\x1b[48;5;%dm",
-              block->fg_color,
-              block->bg_color);
-
-      switch (block->weight) {
-      case BFB_NORMAL:
-        fprintf(stdout, "\x1b[22m");
-        break;
-        case BFB_BOLD:
-        fprintf(stdout, "\x1b[1m");
-        break;
-        case BFB_DIM:
-        fprintf(stdout, "\x1b[2m");
-        break;
-      }
+      fprintf(fp, "\x1b[%dm", block->sgr );
 
       unicode_fput_codepoint(0x2800 + block->pattern, fp);
 
@@ -138,10 +122,7 @@ int bfb_isset(bfb *b, int x, int y) {
   }
 }
 
-void bfb_set_attrs(bfb *b,
-                   int x, int y,
-                   unsigned int fg_color, unsigned int bg_color,
-                   bfb_weight weight) {
+void bfb_set_attrs(bfb *b, int x, int y, unsigned int sgr) {
 
   bfb_pt pt = { x, y };
   bfb_resolve_pt(&pt);
@@ -153,8 +134,6 @@ void bfb_set_attrs(bfb *b,
 
     size_t offset = pt.char_row * b->width + pt.char_col;
 
-    b->blocks[offset].fg_color = fg_color;
-    b->blocks[offset].bg_color = bg_color;
-    b->blocks[offset].weight = weight;
+    b->blocks[offset].sgr = sgr;
   }
 }

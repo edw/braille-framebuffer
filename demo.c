@@ -21,6 +21,7 @@
  * SOFTWARE. */
 
 #include <math.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
@@ -80,6 +81,12 @@ static double get_density(int argc, char **argv) {
   return percentage;
 }
 
+int done = 0;
+
+static void handle_sigint(int _) {
+  done = 1;
+}
+
 extern int main(int argc, char **argv) {
   struct winsize w = get_winsize();
   int width = (w.ws_col-1)*2, height = (w.ws_row-1)*4;
@@ -87,14 +94,16 @@ extern int main(int argc, char **argv) {
   bfb *current_fb = &fb, *next_fb = &fb2, *temp_fb;
   int x, y;
 
+  signal(SIGINT, handle_sigint);
+
   init_bfb(&fb, width, height, 0x0);
   init_bfb(&fb2, width, height, 0x0);
 
   for(x=0; x<width; x++) {
     for(y=0; y< height; y++) {
-      unsigned int color = rand() % 8;
-      bfb_set_attrs(&fb, x, y, color, 233, BFB_NORMAL);
-      bfb_set_attrs(&fb2, x, y, color, 233, BFB_NORMAL);
+      unsigned int color = 30 + (rand() % 8);
+      bfb_set_attrs(&fb, x, y, color);
+      bfb_set_attrs(&fb2, x, y, color);
     }
   }
 
@@ -102,7 +111,7 @@ extern int main(int argc, char **argv) {
 
   bfb_fput(current_fb, stdout);
 
-  while(1) {
+  while(!done) {
     for(x=0; x<width; x++) {
       for(y=0; y<height; y++) {
         int n = neighbors(current_fb, x, y);
@@ -123,5 +132,8 @@ extern int main(int argc, char **argv) {
 
   free_bfb(&fb);
   free_bfb(&fb2);
+
+  fputs("\x1b[0m", stdout);
+
   return EXIT_SUCCESS;
 }
