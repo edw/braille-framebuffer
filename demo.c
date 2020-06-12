@@ -48,22 +48,22 @@ static void seed(bfb *fb, double density) {
 }
 
 int neighbors(bfb *fb, int x, int y) {
-  int width = fb->width;
-  int height = fb->height;
-  int w2 = width * 2, h4 = height * 4;
+  int w2 = fb->width * 2, h4 = fb->height * 4;
   int xm1 = (x+w2-1) % w2;
   int xp1 = (x+1) % w2;
   int ym1 = (y+h4-1) % h4;
   int yp1 = (y+1) % h4;
 
-  return (bfb_isset(fb, xm1, ym1)
-          + bfb_isset(fb, xm1, y)
-          + bfb_isset(fb, xm1, yp1)
-          + bfb_isset(fb, x, ym1)
-          + bfb_isset(fb, x, yp1)
-          + bfb_isset(fb, xp1, ym1)
-          + bfb_isset(fb, xp1, y)
-          + bfb_isset(fb, xp1, yp1));
+  return (
+    bfb_isset(fb, xm1, ym1)
+    + bfb_isset(fb, xm1, y)
+    + bfb_isset(fb, xm1, yp1)
+    + bfb_isset(fb, x, ym1)
+    + bfb_isset(fb, x, yp1)
+    + bfb_isset(fb, xp1, ym1)
+    + bfb_isset(fb, xp1, y)
+    + bfb_isset(fb, xp1, yp1)
+    );
 }
 
 static double get_density(int argc, char **argv) {
