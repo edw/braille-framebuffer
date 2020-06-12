@@ -13,9 +13,6 @@ make demo
 
 ## To-do
 
-* Allow a chunk to be colored or have another terminal effect applied
-  to it e.g. inverse or bold.
-
 * Sprites.
 
 * Routines to place text overlays and lines atop the image.
@@ -45,7 +42,8 @@ when the the framebuffer was initialized.
 
 `void bfb_fput(bfb *b, FILE *fp)`
 
-Output the framebuffer to `fp` using UTF-8 and ANSI escape sequences.
+Output the framebuffer to `fp` using UTF-8 and ANSI escape
+sequences. Resets terminal to normal (zero) SGR rendition.
 
 `void bfb_home(bfb *b, FILE *fp)`
 
@@ -61,6 +59,14 @@ Set the "pixel" at (x,y) to either "white" or "black" based on whether
 `int bfb_isset(bfb *b, int x, int y)`
 
 Returns true if the pixel at (x,y) is "white."
+
+`bfb_set_attr(bfb *b, int x, int y, unsigned int sgr)`
+
+Set's the ANSI SGR ("select graphic rendition") code for the block
+that contains (x,y). Note `bfb_fput()` will keep track of the
+precviously-set SGR code and will not output a new escape sequence if
+the code has not changed. The number of SGR escape sequences sent will
+be the sum of the SGR code _transitions_ within a framebuffer.
 
 That's about it. Pull requests welcome.
 
