@@ -25,8 +25,21 @@
 
 #include <stdio.h>
 
+typedef enum bfb_weight {
+  BFB_NORMAL,
+  BFB_BOLD,
+  BFB_DIM
+} bfb_weight;
+
+typedef struct bfb_block {
+  unsigned short pattern;
+  unsigned int fg_color : 8;
+  unsigned int bg_color : 8;
+  unsigned int weight : 2;
+} bfb_block;
+
 typedef struct bfb {
-  unsigned short *blocks;
+  bfb_block *blocks;
   int width, height;
 } bfb;
 
@@ -46,5 +59,7 @@ void bfb_fput(bfb *b, FILE *fp);
 void bfb_resolve_pt(bfb_pt *pt);
 void bfb_plot(bfb *b, int x, int y, int is_on);
 int bfb_isset(bfb *b, int x, int y);
-
+void bfb_set_attrs(bfb *b, int x, int y,
+                   unsigned int fg_color, unsigned int bg_color,
+                   bfb_weight weight);
 #endif

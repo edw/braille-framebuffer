@@ -29,10 +29,10 @@ extern int init_bfb(
   bfb *b,
   int w_dots, int h_dots,
   unsigned short default_block) {
-  
+
   b->width = (w_dots+1)>>1;
   b->height = (h_dots+3)>>2;
-  b->blocks = malloc(b->width * b->height * sizeof(unsigned short));
+  b->blocks = malloc(b->width * b->height * sizeof(*b->blocks));
 
   if (b->blocks == NULL)
     return -1;
@@ -47,8 +47,14 @@ extern void free_bfb(bfb *b) {
 
 extern void bfb_clear(bfb *b, unsigned short block_value) {
   int i;
-  for (i = 0; i < b->width * b->height; i++)
-    b->blocks[i] = block_value;
+  for (i = 0; i < b->width * b->height; i++) {
+    bfb_block *block = &b->blocks[i];
+
+    block->pattern = block_value;
+    block->fg_color = 7;
+    block->bg_color = 0;
+    block->weight = BFB_NORMAL;
+  }
 }
 
 extern void bfb_home(bfb *b, FILE *fp) {
@@ -60,7 +66,27 @@ extern void bfb_fput(bfb *b, FILE *fp) {
 
   for(row = 0; row < b->height; row++) {
     for(col = 0; col < b->width; col++) {
-      unicode_fput_codepoint(0x2800 + b->blocks[row*b->width + col], fp);
+      size_t offset = row*b->width + col;
+      bfb_block *block = &b->blocks[offset];
+
+      fprintf(fp, "\x1b[38;5;%dm\x1b[48;5;%dm",
+              block->fg_color,
+              block->bg_color);
+
+      switch (block->weight) {
+      case BFB_NORMAL:
+        fprintf(stdout, "\x1b[22m");
+        break;
+        case BFB_BOLD:
+        fprintf(stdout, "\x1b[1m");
+        break;
+        case BFB_DIM:
+        fprintf(stdout, "\x1b[2m");
+        break;
+      }
+
+      unicode_fput_codepoint(0x2800 + block->pattern, fp);
+
     }
     fputc('\n', fp);
   }
@@ -80,31 +106,55 @@ extern void bfb_resolve_pt(bfb_pt *pt) {
 extern void bfb_plot(bfb *b, int x, int y, int is_on) {
   bfb_pt pt = { x, y };
   bfb_resolve_pt(&pt);
-  
+
   if ((pt.char_col >= 0)
       && (pt.char_col < b->width)
       && (pt.char_row >= 0)
       && (pt.char_row < b->height)) {
 
         if (is_on)
-          b->blocks[pt.char_row * b->width + pt.char_col] |= pt.mask;
+          b->blocks[pt.char_row * b->width + pt.char_col].pattern
+            |= pt.mask;
         else
-          b->blocks[pt.char_row * b->width + pt.char_col] &= pt.mask ^ 0xff;
+          b->blocks[pt.char_row * b->width + pt.char_col].pattern
+            &= pt.mask ^ 0xff;
   }
 }
 
 int bfb_isset(bfb *b, int x, int y) {
-  
+
   bfb_pt pt = { x, y };
   bfb_resolve_pt(&pt);
-  
+
   if ((pt.char_col >= 0)
       && (pt.char_col < b->width)
       && (pt.char_row >= 0)
       && (pt.char_row < b->height)) {
 
-    return ((b->blocks[pt.char_row * b->width + pt.char_col] & pt.mask) != 0);
+    return ((b->blocks[pt.char_row * b->width + pt.char_col].pattern
+             & pt.mask) != 0);
   } else {
     return 0;
+  }
+}
+
+void bfb_set_attrs(bfb *b,
+                   int x, int y,
+                   unsigned int fg_color, unsigned int bg_color,
+                   bfb_weight weight) {
+
+  bfb_pt pt = { x, y };
+  bfb_resolve_pt(&pt);
+
+  if ((pt.char_col >= 0)
+      && (pt.char_col < b->width)
+      && (pt.char_row >= 0)
+      && (pt.char_row < b->height)) {
+
+    size_t offset = pt.char_row * b->width + pt.char_col;
+
+    b->blocks[offset].fg_color = fg_color;
+    b->blocks[offset].bg_color = bg_color;
+    b->blocks[offset].weight = weight;
   }
 }
