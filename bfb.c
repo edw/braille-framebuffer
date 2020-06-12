@@ -25,13 +25,14 @@
 #include "unicode.h"
 #include "bfb.h"
 
-extern int init_bfb(
+extern int init_bfb (
   bfb *b,
-  int w_dots, int h_dots,
-  unsigned short default_block) {
+  int dot_width, int dot_height,
+  unsigned short default_block)
+{
 
-  b->width = (w_dots+1)>>1;
-  b->height = (h_dots+3)>>2;
+  b->width = (dot_width+1)>>1;
+  b->height = (dot_height+3)>>2;
   b->blocks = malloc(b->width * b->height * sizeof(*b->blocks));
 
   if (b->blocks == NULL)
@@ -41,11 +42,13 @@ extern int init_bfb(
   return 0;
 }
 
-extern void free_bfb(bfb *b) {
+extern void free_bfb(bfb *b)
+{
   free(b->blocks);
 }
 
-extern void bfb_clear(bfb *b, unsigned short block_value) {
+extern void bfb_clear(bfb *b, unsigned short block_value)
+{
   int i;
   for (i = 0; i < b->width * b->height; i++) {
     bfb_block *block = &b->blocks[i];
@@ -57,11 +60,13 @@ extern void bfb_clear(bfb *b, unsigned short block_value) {
   }
 }
 
-extern void bfb_home(bfb *b, FILE *fp) {
+extern void bfb_home(bfb *b, FILE *fp)
+{
   fprintf(fp, "\x1b[%dA\x1b[G", b->height);
 }
 
-extern void bfb_fput(bfb *b, FILE *fp) {
+extern void bfb_fput(bfb *b, FILE *fp)
+{
   int row, col;
   int prev_sgr1 = 0;
   int prev_sgr2 = 0;
@@ -105,18 +110,21 @@ extern void bfb_fput(bfb *b, FILE *fp) {
   fputs("\x1b[0m", fp);
 }
 
-static size_t mask(int x, int y) {
+static size_t mask(int x, int y)
+{
   static unsigned short offsets[] = {0, 3, 1, 4, 2, 5, 6, 7};
   return 1 << offsets[(y << 1) | x];
 }
 
-extern void bfb_resolve_pt(bfb_pt *pt) {
+extern void bfb_resolve_pt(bfb_pt *pt)
+{
   pt->char_col = pt->x >> 1;
   pt->char_row = pt->y >> 2;
   pt->mask = mask(pt->x & 0x01, pt->y & 0x03);
 }
 
-extern void bfb_plot(bfb *b, int x, int y, int is_on) {
+extern void bfb_plot(bfb *b, int x, int y, int is_on)
+{
   bfb_pt pt = { x, y };
   bfb_resolve_pt(&pt);
 
@@ -134,8 +142,8 @@ extern void bfb_plot(bfb *b, int x, int y, int is_on) {
   }
 }
 
-int bfb_isset(bfb *b, int x, int y) {
-
+int bfb_isset(bfb *b, int x, int y)
+{
   bfb_pt pt = { x, y };
   bfb_resolve_pt(&pt);
 
@@ -151,13 +159,14 @@ int bfb_isset(bfb *b, int x, int y) {
   }
 }
 
-void bfb_set_attrs(
-  bfb *b, int x, int y,
+void bfb_set_chunk_attrs(
+  bfb *b,
+  int dot_x, int dot_y,
   unsigned int sgr1,
   unsigned int sgr2,
   unsigned int sgr3)
 {
-  bfb_pt pt = { x, y };
+  bfb_pt pt = { dot_x, dot_y };
   bfb_resolve_pt(&pt);
 
   if ((pt.char_col >= 0)

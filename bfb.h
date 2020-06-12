@@ -45,7 +45,11 @@ typedef struct bfb_pt {
   unsigned int mask : 8;
 } bfb_pt;
 
-int init_bfb(bfb *b, int w_dots, int h_dots, unsigned short default_block);
+int init_bfb(
+  bfb *b,
+  int dot_width, int dot_height,
+  unsigned short default_block);
+
 void free_bfb(bfb *b);
 void bfb_clear(bfb *b, unsigned short block_value);
 void bfb_home(bfb *b, FILE *fp);
@@ -53,9 +57,12 @@ void bfb_fput(bfb *b, FILE *fp);
 void bfb_resolve_pt(bfb_pt *pt);
 void bfb_plot(bfb *b, int x, int y, int is_on);
 int bfb_isset(bfb *b, int x, int y);
-void bfb_set_attrs(bfb *b, int x, int y,
-                   unsigned int sgr1,
-                   unsigned int sgr2,
-                   unsigned int sgr3);
+
+void bfb_set_chunk_attrs(
+  bfb *b,
+  int dot_x, int dot_y,
+  unsigned int sgr1,
+  unsigned int sgr2,
+  unsigned int sgr3);
 
 #endif

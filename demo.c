@@ -100,12 +100,10 @@ extern int main(int argc, char **argv) {
   init_bfb(&fb, width, height, 0x0);
   init_bfb(&fb2, width, height, 0x0);
 
-
-  for(x=0; x<width; x++) {
-    for(y=0; y< height; y++) {
-
-      bfb_set_attrs(&fb, x, y, sgr1, sgr2, sgr3);
-      bfb_set_attrs(&fb2, x, y, sgr1, sgr2, sgr3);
+  for(x=0; x<w.ws_col-1; x++) {
+    for(y=0; y<w.ws_row-1; y++) {
+      bfb_set_chunk_attrs(&fb, x*2, y*4, sgr1, sgr2, sgr3);
+      bfb_set_chunk_attrs(&fb2, x*2, y*4, sgr1, sgr2, sgr3);
     }
   }
 

@@ -22,7 +22,7 @@ make demo
 The interface is extremely straightforward. You should be able to do
 whatever you want with the following routines:
 
-`int init_bfb(bfb *b, int w_dots, int h_dots, unsigned short default_block)`
+`int init_bfb(bfb *b, int dot_width, int dot_height, unsigned short default_block)`
 
 Pass a pointer to your `brb` value along with the width and height in
 dots and the default braille codepoint minus 0x2800 to populate the
@@ -60,10 +60,10 @@ Set the "pixel" at (x,y) to either "white" or "black" based on whether
 
 Returns true if the pixel at (x,y) is "white."
 
-`bfb_set_attr(bfb *b, int x, int y, unsigned int sgr1, unsigned int sgr2, unsigned int sgr3, )`
+`bfb_set_chunk_attrs(bfb *b, int dot_x, int dot_y, unsigned int sgr1, unsigned int sgr2, unsigned int sgr3, )`
 
 Set's the ANSI SGR ("select graphic rendition") codes for the block
-that contains (x,y). Note `bfb_fput()` will keep track of the
+that contains (dot_x, dot_y). Note `bfb_fput()` will keep track of the
 precviously-set SGR codes for each provided code argument and will not
 output a new escape sequence if 1) that particlar code (e.g. `sgr2`)
 has not changed since the previously printed chunk or 2) the code is
