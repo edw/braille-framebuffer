@@ -25,17 +25,11 @@
 
 #include <stdio.h>
 
-typedef enum bfb_weight {
-  BFB_NORMAL,
-  BFB_BOLD,
-  BFB_DIM
-} bfb_weight;
-
 typedef struct bfb_block {
-  unsigned short pattern;
-  unsigned int fg_color : 8;
-  unsigned int bg_color : 8;
-  unsigned int weight : 2;
+  unsigned int pattern : 8;
+  unsigned int sgr1 : 8;
+  unsigned int sgr2 : 8;
+  unsigned int sgr3 : 8;
 } bfb_block;
 
 typedef struct bfb {
@@ -48,10 +42,14 @@ typedef struct bfb_pt {
   int y;
   int char_col;
   int char_row;
-  unsigned short mask;
+  unsigned int mask : 8;
 } bfb_pt;
 
-int init_bfb(bfb *b, int w_dots, int h_dots, unsigned short default_block);
+int init_bfb(
+  bfb *b,
+  int dot_width, int dot_height,
+  unsigned short default_block);
+
 void free_bfb(bfb *b);
 void bfb_clear(bfb *b, unsigned short block_value);
 void bfb_home(bfb *b, FILE *fp);
@@ -59,7 +57,12 @@ void bfb_fput(bfb *b, FILE *fp);
 void bfb_resolve_pt(bfb_pt *pt);
 void bfb_plot(bfb *b, int x, int y, int is_on);
 int bfb_isset(bfb *b, int x, int y);
-void bfb_set_attrs(bfb *b, int x, int y,
-                   unsigned int fg_color, unsigned int bg_color,
-                   bfb_weight weight);
+
+void bfb_set_chunk_attrs(
+  bfb *b,
+  int dot_x, int dot_y,
+  unsigned int sgr1,
+  unsigned int sgr2,
+  unsigned int sgr3);
+
 #endif
