@@ -27,6 +27,68 @@
 #include <sys/ioctl.h>
 
 #include "bfb.h"
+#include "lenna.H"
+
+/* PNM stuff */
+
+typedef struct pnm_image {
+  const unsigned char *bytes;
+  const unsigned char *pixels;
+  int width;
+  int height;
+  unsigned char type[3];
+} pnm_image;
+
+void pnm_parse_header(pnm_image *i)
+
+  /* const unsigned char *pnm, unsigned char *type, */
+  /* int *w, int *h, const unsigned char **pixels) */
+{
+  const unsigned char *ptr = i->bytes;
+  i->type[0] = *ptr++;
+  i->type[1] = *ptr++;
+  i->type[2] = '\0';
+
+  ptr++;
+
+  i->width = atol(ptr);
+  for(; *ptr != 0x20; ptr++)
+    ;
+  ptr++;
+  fputc(*ptr, stdout);
+  i->height = atol(ptr);
+  ptr++;
+  for(; *ptr != 0x0a; ptr++)
+    ;
+  ptr++;
+  for(; *ptr != 0x0a; ptr++)
+    ;
+  ptr++;
+  i->pixels = ptr;
+}
+
+double pnm_rgb_to_luma(const unsigned char *pixel)
+{
+  /* Y'= 0.212 * R + 0.701 * G+0.087 * B */
+  return (0.212 * ((double)*pixel/255.0)
+          + 0.701 * ((double)*(pixel+1)/255.0)
+          + 1.000 * ((double)*(pixel+2)/255.0));
+}
+
+void pnm_xfer_fn(
+  bfb *dest, const void *src,
+  int x, int y, bfb_pt *pt)
+{
+  const pnm_image *i = (const pnm_image*)src;
+  double luma = pnm_rgb_to_luma(src+(i->width*x+y)*3);
+  if ((double)(rand() % 100)/100.0 > (1.0 - luma))
+    bfb_pt_set(*pt);
+  else
+    bfb_pt_reset(*pt);
+}
+
+/* END PNM stuff */
+
 
 static struct winsize get_winsize() {
   struct winsize w;
@@ -111,29 +173,51 @@ extern int main(int argc, char **argv) {
 
   bfb_fput(current_fb, stdout);
 
-  while(!done) {
-    for(x=0; x<width; x++) {
-      for(y=0; y<height; y++) {
-        int n = neighbors(current_fb, x, y);
-        if(bfb_isset(current_fb, x, y))
-          bfb_plot(next_fb, x, y, (n == 2) || (n == 3));
-        else
-          bfb_plot(next_fb, x, y, (n == 3));
-      }
-    }
-    bfb_home(current_fb, stdout);
-    bfb_fput(current_fb, stdout);
-    fflush(stdout);
+  /* while(!done) { */
+  /*   for(x=0; x<width; x++) { */
+  /*     for(y=0; y<height; y++) { */
+  /*       int n = neighbors(current_fb, x, y); */
+  /*       if(bfb_isset(current_fb, x, y)) */
+  /*         bfb_plot(next_fb, x, y, (n == 2) || (n == 3)); */
+  /*       else */
+  /*         bfb_plot(next_fb, x, y, (n == 3)); */
+  /*     } */
+  /*   } */
+  /*   bfb_home(current_fb, stdout); */
+  /*   bfb_fput(current_fb, stdout); */
+  /*   fflush(stdout); */
 
-    temp_fb = current_fb;
-    current_fb = next_fb;
-    next_fb = temp_fb;
-  }
+  /*   temp_fb = current_fb; */
+  /*   current_fb = next_fb; */
+  /*   next_fb = temp_fb; */
+  /* } */
+
+  pnm_image image = { MagickImage };
+  pnm_parse_header(&image);
+
+  if (strcmp(image.type, "P6") != 0)
+    return EXIT_FAILURE;
+
+  bfb_blit(
+    current_fb, (const void *)&image,
+    0, 0,
+    pnm_xfer_fn,
+    24, image.width, image.height,
+    0.25, 0.25);
+
+  bfb_home(current_fb, stdout);
+  bfb_fput(current_fb, stdout);
 
   free_bfb(&fb);
   free_bfb(&fb2);
 
   fputs("\x1b[0m", stdout);
+
+  fprintf(
+    stdout,
+    "pnm type %s width %d height %d pnm %x pixels %x\n",
+    image.type, image.width, image.height,
+    image.bytes, image.pixels);
 
   return EXIT_SUCCESS;
 }

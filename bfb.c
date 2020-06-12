@@ -20,6 +20,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "unicode.h"
@@ -121,6 +122,7 @@ extern void bfb_resolve_pt(bfb_pt *pt)
   pt->char_col = pt->x >> 1;
   pt->char_row = pt->y >> 2;
   pt->mask = mask(pt->x & 0x01, pt->y & 0x03);
+  pt->block = NULL;
 }
 
 extern void bfb_plot(bfb *b, int x, int y, int is_on)
@@ -142,24 +144,27 @@ extern void bfb_plot(bfb *b, int x, int y, int is_on)
   }
 }
 
+static bfb_peek(bfb *b, bfb_pt *pt)
+{
+  bfb_resolve_pt(pt);
+  if ((pt->char_col >= 0)
+      && (pt->char_col < b->width)
+      && (pt->char_row >= 0)
+      && (pt->char_row < b->height))
+    pt->block = &b->blocks[pt->char_row * b->width + pt->char_col];
+  else
+    pt->block = NULL;
+}
+
 int bfb_isset(bfb *b, int x, int y)
 {
   bfb_pt pt = { x, y };
-  bfb_resolve_pt(&pt);
-
-  if ((pt.char_col >= 0)
-      && (pt.char_col < b->width)
-      && (pt.char_row >= 0)
-      && (pt.char_row < b->height)) {
-
-    return ((b->blocks[pt.char_row * b->width + pt.char_col].pattern
-             & pt.mask) != 0);
-  } else {
-    return 0;
-  }
+  bfb_peek(b, &pt);
+  return ((pt.block != NULL)
+          &&((pt.block->pattern & pt.mask) != 0));
 }
 
-void bfb_set_chunk_attrs(
+extern void bfb_set_chunk_attrs(
   bfb *b,
   int dot_x, int dot_y,
   unsigned int sgr1,
@@ -167,17 +172,35 @@ void bfb_set_chunk_attrs(
   unsigned int sgr3)
 {
   bfb_pt pt = { dot_x, dot_y };
-  bfb_resolve_pt(&pt);
+  bfb_peek(b, &pt);
 
-  if ((pt.char_col >= 0)
-      && (pt.char_col < b->width)
-      && (pt.char_row >= 0)
-      && (pt.char_row < b->height)) {
+  if (pt.block != NULL)
+  {
+    pt.block->sgr1 = sgr1;
+    pt.block->sgr2 = sgr2;
+    pt.block->sgr3 = sgr3;
+  }
+}
 
-    bfb_block *block = &b->blocks[pt.char_row * b->width
-                                  + pt.char_col];
-    block->sgr1 = sgr1;
-    block->sgr2 = sgr2;
-    block->sgr3 = sgr3;
+extern void bfb_blit(
+  bfb *dest, const void *src,
+  int at_dest_x, int at_dest_y,
+  bfb_xfer_fn transfer_fn,
+  unsigned int src_depth,
+  unsigned int src_width,
+  unsigned int src_height,
+  double x_scale, double y_scale)
+{
+  int i, j;
+  int w_steps = (int)((double)src_width * x_scale);
+  int h_steps = (int)((double)src_height * y_scale);
+  for (i = 0; i < w_steps; i++) {
+    for (j = 0; j < h_steps; j++) {
+      int src_x = (int)round((double)i * x_scale);
+      int src_y = (int)round((double)j * y_scale);
+      bfb_pt current = {i + at_dest_x, j + at_dest_y};
+      bfb_peek(dest, &current);
+      transfer_fn(dest, src, src_x, src_y, &current);
+    }
   }
 }
