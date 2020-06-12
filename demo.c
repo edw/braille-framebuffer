@@ -51,9 +51,9 @@ int neighbors(bfb *fb, int x, int y) {
   int width = fb->width;
   int height = fb->height;
   int w2 = width * 2, h4 = height * 4;
-  int xm1 = (x-1) % w2;
+  int xm1 = (x+w2-1) % w2;
   int xp1 = (x+1) % w2;
-  int ym1 = (y-1) % h4;
+  int ym1 = (y+h4-1) % h4;
   int yp1 = (y+1) % h4;
 
   return (bfb_isset(fb, xm1, ym1)
