@@ -17,6 +17,11 @@ make demo
 
 * Routines to place text overlays and lines atop the image.
 
+* Translate bitmap to braille codepoint values more efficiently via a
+  lookup table.
+
+* Blitting with transfer modes.
+
 ## Using bfb.c
 
 The interface is extremely straightforward. You should be able to do
