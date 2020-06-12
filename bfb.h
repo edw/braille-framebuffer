@@ -27,7 +27,9 @@
 
 typedef struct bfb_block {
   unsigned int pattern : 8;
-  unsigned int sgr : 8;
+  unsigned int sgr1 : 8;
+  unsigned int sgr2 : 8;
+  unsigned int sgr3 : 8;
 } bfb_block;
 
 typedef struct bfb {
@@ -51,6 +53,9 @@ void bfb_fput(bfb *b, FILE *fp);
 void bfb_resolve_pt(bfb_pt *pt);
 void bfb_plot(bfb *b, int x, int y, int is_on);
 int bfb_isset(bfb *b, int x, int y);
-void bfb_set_attrs(bfb *b, int x, int y, unsigned int sgr);
+void bfb_set_attrs(bfb *b, int x, int y,
+                   unsigned int sgr1,
+                   unsigned int sgr2,
+                   unsigned int sgr3);
 
 #endif

@@ -51,7 +51,9 @@ extern void bfb_clear(bfb *b, unsigned short block_value) {
     bfb_block *block = &b->blocks[i];
 
     block->pattern = block_value;
-    block->sgr = 0;
+    block->sgr1 = 0;
+    block->sgr2 = 0;
+    block->sgr3 = 0;
   }
 }
 
@@ -61,7 +63,9 @@ extern void bfb_home(bfb *b, FILE *fp) {
 
 extern void bfb_fput(bfb *b, FILE *fp) {
   int row, col;
-  int prev_sgr = 0;
+  int prev_sgr1 = 0;
+  int prev_sgr2 = 0;
+  int prev_sgr3 = 0;
 
   fputs("\x1b[0m", fp);
 
@@ -69,11 +73,28 @@ extern void bfb_fput(bfb *b, FILE *fp) {
     for(col = 0; col < b->width; col++) {
       size_t offset = row*b->width + col;
       bfb_block *block = &b->blocks[offset];
-      int sgr = block->sgr;
+      int sgr1 = block->sgr1;
+      int sgr2 = block->sgr2;
+      int sgr3 = block->sgr3;
 
-      if (sgr != prev_sgr) {
-        fprintf(fp, "\x1b[%dm", sgr );
-        prev_sgr = sgr;
+      if (sgr1 != prev_sgr1) {
+        fprintf(fp, "\x1b[%dm", sgr1 );
+        prev_sgr1 = sgr1;
+      }
+
+      if ((sgr2 != prev_sgr2)
+          && (sgr2 != prev_sgr1))
+      {
+        fprintf(fp, "\x1b[%dm", sgr2 );
+        prev_sgr2 = sgr2;
+      }
+
+      if ((sgr3 != prev_sgr3)
+          && (sgr3 != prev_sgr2)
+          && (sgr3 != prev_sgr1))
+      {
+        fprintf(fp, "\x1b[%dm", sgr3 );
+        prev_sgr3 = sgr3;
       }
 
       unicode_fput_codepoint(0x2800 + block->pattern, fp);
@@ -130,8 +151,12 @@ int bfb_isset(bfb *b, int x, int y) {
   }
 }
 
-void bfb_set_attrs(bfb *b, int x, int y, unsigned int sgr) {
-
+void bfb_set_attrs(
+  bfb *b, int x, int y,
+  unsigned int sgr1,
+  unsigned int sgr2,
+  unsigned int sgr3)
+{
   bfb_pt pt = { x, y };
   bfb_resolve_pt(&pt);
 
@@ -140,8 +165,10 @@ void bfb_set_attrs(bfb *b, int x, int y, unsigned int sgr) {
       && (pt.char_row >= 0)
       && (pt.char_row < b->height)) {
 
-    size_t offset = pt.char_row * b->width + pt.char_col;
-
-    b->blocks[offset].sgr = sgr;
+    bfb_block *block = &b->blocks[pt.char_row * b->width
+                                  + pt.char_col];
+    block->sgr1 = sgr1;
+    block->sgr2 = sgr2;
+    block->sgr3 = sgr3;
   }
 }

@@ -60,13 +60,18 @@ Set the "pixel" at (x,y) to either "white" or "black" based on whether
 
 Returns true if the pixel at (x,y) is "white."
 
-`bfb_set_attr(bfb *b, int x, int y, unsigned int sgr)`
+`bfb_set_attr(bfb *b, int x, int y, unsigned int sgr1, unsigned int sgr2, unsigned int sgr3, )`
 
-Set's the ANSI SGR ("select graphic rendition") code for the block
+Set's the ANSI SGR ("select graphic rendition") codes for the block
 that contains (x,y). Note `bfb_fput()` will keep track of the
-precviously-set SGR code and will not output a new escape sequence if
-the code has not changed. The number of SGR escape sequences sent will
-be the sum of the SGR code _transitions_ within a framebuffer.
+precviously-set SGR codes for each provided code argument and will not
+output a new escape sequence if 1) that particlar code (e.g. `sgr2`)
+has not changed since the previously printed chunk or 2) the code is
+the same any SGR code that preceded it in the current chunk. This
+approach is intended to allow all SGR codes to be set to zero by
+default and have the output appear as expected. The number of SGR
+escape sequences sent will be the sum of the SGR code _transitions_
+within a framebuffer.
 
 That's about it. Pull requests welcome.
 

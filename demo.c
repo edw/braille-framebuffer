@@ -93,17 +93,19 @@ extern int main(int argc, char **argv) {
   bfb fb, fb2;
   bfb *current_fb = &fb, *next_fb = &fb2, *temp_fb;
   int x, y;
+  unsigned int sgr1 = 0, sgr2 = 0, sgr3 = 0;
 
   signal(SIGINT, handle_sigint);
 
   init_bfb(&fb, width, height, 0x0);
   init_bfb(&fb2, width, height, 0x0);
 
+
   for(x=0; x<width; x++) {
     for(y=0; y< height; y++) {
-      unsigned int color = 94 /* 30 + (rand() % 8) */;
-      bfb_set_attrs(&fb, x, y, color);
-      bfb_set_attrs(&fb2, x, y, color);
+
+      bfb_set_attrs(&fb, x, y, sgr1, sgr2, sgr3);
+      bfb_set_attrs(&fb2, x, y, sgr1, sgr2, sgr3);
     }
   }
 
