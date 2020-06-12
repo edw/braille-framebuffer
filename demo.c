@@ -101,7 +101,7 @@ extern int main(int argc, char **argv) {
 
   for(x=0; x<width; x++) {
     for(y=0; y< height; y++) {
-      unsigned int color = 30 + (rand() % 8);
+      unsigned int color = 94 /* 30 + (rand() % 8) */;
       bfb_set_attrs(&fb, x, y, color);
       bfb_set_attrs(&fb2, x, y, color);
     }

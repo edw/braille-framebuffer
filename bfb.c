@@ -61,19 +61,27 @@ extern void bfb_home(bfb *b, FILE *fp) {
 
 extern void bfb_fput(bfb *b, FILE *fp) {
   int row, col;
+  int prev_sgr = 0;
+
+  fputs("\x1b[0m", fp);
 
   for(row = 0; row < b->height; row++) {
     for(col = 0; col < b->width; col++) {
       size_t offset = row*b->width + col;
       bfb_block *block = &b->blocks[offset];
+      int sgr = block->sgr;
 
-      fprintf(fp, "\x1b[%dm", block->sgr );
+      if (sgr != prev_sgr) {
+        fprintf(fp, "\x1b[%dm", sgr );
+        prev_sgr = sgr;
+      }
 
       unicode_fput_codepoint(0x2800 + block->pattern, fp);
 
     }
     fputc('\n', fp);
   }
+  fputs("\x1b[0m", fp);
 }
 
 static size_t mask(int x, int y) {
