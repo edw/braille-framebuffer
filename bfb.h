@@ -42,8 +42,12 @@ typedef struct bfb_pt {
   int y;
   int char_col;
   int char_row;
+  bfb_block *block;
   unsigned int mask : 8;
 } bfb_pt;
+
+#define bfb_pt_set(pt) ((pt).block->pattern |= (pt).mask)
+#define bfb_pt_reset(pt) ((pt).block->pattern &= (pt).mask ^ 0xff)
 
 int init_bfb(
   bfb *b,
@@ -64,5 +68,19 @@ void bfb_set_chunk_attrs(
   unsigned int sgr1,
   unsigned int sgr2,
   unsigned int sgr3);
+
+typedef void (*bfb_xfer_fn)(
+  bfb *dest, const void *src,
+  int bitmap_x, int bitmap_y,
+  bfb_pt *point);
+
+extern void bfb_blit(
+  bfb *dest, const void *src,
+  int at_dest_x, int at_dest_y,
+  bfb_xfer_fn transfer_fn,
+  unsigned int src_depth,
+  unsigned int src_width,
+  unsigned int src_height,
+  double x_scale, double y_scale);
 
 #endif
