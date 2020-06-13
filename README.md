@@ -1,6 +1,6 @@
 # A Braille Unicode Framebuffer Library for the Terminal in C89
 
-![A screenshot of my iPad running the demo in Blink shell](https://poseur.com/lenna.png)
+![A screenshot](https://poseur.com/braille-beatriz-et-madeleine.png)
 
 Fun fact: if you set your terminal to 141 by 49, your terminal will, compared to an Apple II+, have the same resolution, far more colors, and a slightly different set of rules constraining their use.
 
