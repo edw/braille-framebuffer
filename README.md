@@ -92,3 +92,9 @@ The demo image is copyright 2000 Edwin Watkeys. Permission is granted
 to use the image only in conjuction with execution of the `demo`
 program. All other rights reserved. The rest of this project is
 distributed under an MIT-style license.
+
+## Refereneces
+
+* [The PPM image format](http://netpbm.sourceforge.net/doc/ppm.html)
+* [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code)
+* [HSL and HSV color representations](https://en.wikipedia.org/wiki/HSL_and_HSV)

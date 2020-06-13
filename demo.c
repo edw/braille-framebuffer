@@ -294,6 +294,9 @@ extern int main(int argc, char **argv) {
     image.width, image.height,
     x_scale, y_scale, &opts);
 
+  munmap((void *)image.bytes, pnm_stat_buf.st_size);
+  close(pnm_fd);
+
   bfb_home(current_fb, stdout);
   bfb_fput(current_fb, stdout);
 
