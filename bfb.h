@@ -46,8 +46,8 @@ typedef struct bfb_pt {
   unsigned int mask : 8;
 } bfb_pt;
 
-#define bfb_pt_set(pt) ((pt).block->pattern |= (pt).mask)
-#define bfb_pt_reset(pt) ((pt).block->pattern &= (pt).mask ^ 0xff)
+void bfb_pt_set(bfb_pt *p);
+void bfb_pt_reset(bfb_pt *p);
 
 int init_bfb(
   bfb *b,
@@ -78,7 +78,6 @@ extern void bfb_blit(
   bfb *dest, const void *src,
   int at_dest_x, int at_dest_y,
   bfb_xfer_fn transfer_fn,
-  unsigned int src_depth,
   unsigned int src_width,
   unsigned int src_height,
   double x_scale, double y_scale);
