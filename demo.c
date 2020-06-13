@@ -283,7 +283,7 @@ extern int main(int argc, char **argv) {
     return EXIT_FAILURE;
 
   double y_scale = (height * 0.9) / image.height;
-  double x_scale = y_scale * 1.25;
+  double x_scale = y_scale * 1.1;
   int image_y = (int)(height - image.height*y_scale) * 0.35;
   int image_x = (int)(width - image.width*x_scale) * 0.5;
   pnm_xfer_options opts = { 0.5, 0.8, 1.5, 1.0, 0.01};
