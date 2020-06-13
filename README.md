@@ -1,6 +1,6 @@
 # A Braille Unicode Framebuffer Library for the Terminal in C89
 
-![A screenshot](https://poseur.com/braille-beatriz-et-madeleine.png)
+![A screenshot](https://poseur.com/the-game-of-life-beatriz-et-madeleine-in-braille.png)
 
 Fun fact: if you set your terminal to 141 by 49, your terminal will, compared to an Apple II+, have the same resolution, far more colors, and a slightly different set of rules constraining their use.
 
