@@ -75,7 +75,7 @@ typedef void (*bfb_xfer_fn)(
   bfb_pt *point,
   void *refcon);
 
-extern void bfb_blit(
+void bfb_blit(
   bfb *dest, const void *src,
   int at_dest_x, int at_dest_y,
   bfb_xfer_fn transfer_fn,

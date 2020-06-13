@@ -2,7 +2,17 @@
 
 ![A screenshot](https://poseur.com/the-game-of-life-beatriz-et-madeleine-in-braille.png)
 
-Fun fact: if you set your terminal to 141 by 49, your terminal will, compared to an Apple II+, have the same resolution, far more colors, and a slightly different set of rules constraining their use.
+Fun fact: if you set your terminal to 141 by 49, your terminal will,
+compared to an Apple II+, have the same resolution, far more colors,
+and a slightly different set of rules constraining their use.
+
+
+## Prerequisites
+
+* A C compiler.
+* A POSIX-y operating system.
+* A terminal that support ANSI positioning and color escape sequences.
+* A UTF-8 locale.
 
 ## Building
 
@@ -19,8 +29,6 @@ make demo
 
 * Translate bitmap to braille codepoint values more efficiently via a
   lookup table.
-
-* Blitting with transfer modes.
 
 ## Using bfb.c
 
@@ -78,7 +86,26 @@ default and have the output appear as expected. The number of SGR
 escape sequences sent will be the sum of the SGR code _transitions_
 within a framebuffer.
 
-That's about it. Pull requests welcome.
+`void bfb_blit(
+  bfb *dest, const void *src,
+  int at_dest_x, int at_dest_y,
+  bfb_xfer_fn transfer_fn,
+  unsigned int src_width,
+  unsigned int src_height,
+  double x_scale, double y_scale, void *refcon)`
+
+Blit `src` into `dest` using `transfer_fn`. The `bfb_blit`
+implemenetaton does not look inside `src`; it simply passes it to the
+transfer function. Due to scaling, the transfer function may or may
+not be called for each pixel in the image, and it is possible the
+transfer function will be called multiple times on the same pixel. The
+`refcon` value is passed to the transfer function and is intended for
+passing options to it. Consult the header file and demo program for
+details on the transfer function's signature.
+
+## Contributions
+
+Pull requests welcome.
 
 ## Motivation
 
