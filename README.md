@@ -122,6 +122,7 @@ distributed under an MIT-style license.
 
 ## Refereneces
 
-* [The PPM image format](http://netpbm.sourceforge.net/doc/ppm.html)
-* [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code)
-* [HSL and HSV color representations](https://en.wikipedia.org/wiki/HSL_and_HSV)
+* [The PPM image format.](http://netpbm.sourceforge.net/doc/ppm.html)
+* [ANSI escape codes.](https://en.wikipedia.org/wiki/ANSI_escape_code)
+* [HSL and HSV color representations.](https://en.wikipedia.org/wiki/HSL_and_HSV)
+* ["Code Signing for the Concerned."](https://eclecticlight.co/2019/01/17/code-signing-for-the-concerned-3-signing-an-app/)
