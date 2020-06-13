@@ -85,3 +85,10 @@ That's about it. Pull requests welcome.
 The subject of text graphics have been coming up on Hacker News a lot
 recently, and I thought it would be fun to create a little library for
 drawing inside the terminal.
+
+## Demo Image
+
+The demo image is copyright 2000 Edwin Watkeys. Permission is granted
+to use the image only in conjuction with execution of the `demo`
+program. All other rights reserved. The rest of this project is
+distributed under an MIT-style license.

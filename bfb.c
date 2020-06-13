@@ -144,7 +144,7 @@ extern void bfb_plot(bfb *b, int x, int y, int is_on)
   }
 }
 
-static bfb_peek(bfb *b, bfb_pt *pt)
+static void bfb_peek(bfb *b, bfb_pt *pt)
 {
   bfb_resolve_pt(pt);
   if ((pt->char_col >= 0)
@@ -182,25 +182,38 @@ extern void bfb_set_chunk_attrs(
   }
 }
 
+extern void bfb_pt_set(bfb_pt *pt)
+{
+  if (pt->block != NULL)
+    pt->block->pattern |= pt->mask;
+}
+
+extern void bfb_pt_reset(bfb_pt *pt)
+{
+  if (pt->block != NULL)
+    pt->block->pattern &= pt->mask ^ 0xff;
+}
+
 extern void bfb_blit(
   bfb *dest, const void *src,
   int at_dest_x, int at_dest_y,
   bfb_xfer_fn transfer_fn,
-  unsigned int src_depth,
   unsigned int src_width,
   unsigned int src_height,
-  double x_scale, double y_scale)
+  double x_scale, double y_scale,
+  void *refcon)
 {
   int i, j;
   int w_steps = (int)((double)src_width * x_scale);
   int h_steps = (int)((double)src_height * y_scale);
+
   for (i = 0; i < w_steps; i++) {
     for (j = 0; j < h_steps; j++) {
-      int src_x = (int)round((double)i * x_scale);
-      int src_y = (int)round((double)j * y_scale);
+      int src_x = (int)round((double)i / x_scale);
+      int src_y = (int)round((double)j / y_scale);
       bfb_pt current = {i + at_dest_x, j + at_dest_y};
       bfb_peek(dest, &current);
-      transfer_fn(dest, src, src_x, src_y, &current);
+      transfer_fn(dest, src, src_x, src_y, &current, refcon);
     }
   }
 }

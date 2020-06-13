@@ -20,14 +20,17 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+#include <fcntl.h>
 #include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 #include "bfb.h"
-#include "lenna.H"
 
 /* PNM stuff */
 
@@ -51,12 +54,12 @@ void pnm_parse_header(pnm_image *i)
 
   ptr++;
 
-  i->width = atol(ptr);
+  i->width = atol((const char *)ptr);
   for(; *ptr != 0x20; ptr++)
     ;
   ptr++;
   fputc(*ptr, stdout);
-  i->height = atol(ptr);
+  i->height = atol((const char *)ptr);
   ptr++;
   for(; *ptr != 0x0a; ptr++)
     ;
@@ -67,24 +70,91 @@ void pnm_parse_header(pnm_image *i)
   i->pixels = ptr;
 }
 
-double pnm_rgb_to_luma(const unsigned char *pixel)
+void rgb_to_luma_hue_saturation(
+  const unsigned char *pixel,
+  double *luma, double *hue, double *saturation,
+  double r_coeff, double g_coeff, double b_coeff)
 {
-  /* Y'= 0.212 * R + 0.701 * G+0.087 * B */
-  return (0.212 * ((double)*pixel/255.0)
-          + 0.701 * ((double)*(pixel+1)/255.0)
-          + 1.000 * ((double)*(pixel+2)/255.0));
+  double r = ((double)*pixel)/255.0 * r_coeff;
+  double g = ((double)*(pixel+1))/255.0 * g_coeff;
+  double b = ((double)*(pixel+2))/255.0 * b_coeff;
+
+  *luma =  0.2126*r + 0.715*g + 0.722*b;
+
+  double m, M, C, Hp;
+  m = r < g ? r : g;
+  m = m < b ? m : b;
+  M = r < g ? g : r;
+  M = M < b ? b : M;
+  C = M - m;
+
+  if (C == 0.0) {
+    Hp = 0.0;
+  } else if (M == r) {
+    Hp = remainder(60.0 * ((g-b)/C) + 360.0, 360.0);
+  } else if (M == g) {
+    Hp = remainder(60.0 * ((b-r)/C) + 120.0, 360.0);
+  } else {
+    Hp = remainder(60.0 * ((r-g)/C) + 240.0, 360.0);
+  }
+
+  if (Hp < 0.0)
+    *hue = Hp + 360.0;
+  else
+    *hue = Hp;
+
+  if ((*luma <= 0.0) || (*luma >= 1.0))
+    *saturation = 0.0;
+  else
+    *saturation = C/(1.0 - fabs(2.0*(*luma) - 1.0));
 }
+
+int hue_to_ansi_color(double hue_degs)
+{
+  if (hue_degs < 30.0)
+    return 31;
+  else if (hue_degs < 90.0)
+    return 33;
+  else if (hue_degs < 150.0)
+    return 32;
+  else if (hue_degs < 210.0)
+    return 36;
+  else if (hue_degs < 270.0)
+    return 35;
+  else
+    return 31;
+}
+
+typedef struct pnm_xfer_options {
+  double r_coeff, g_coeff, b_coeff;
+  double luma_coeff, sat_thresh;
+} pnm_xfer_options;
 
 void pnm_xfer_fn(
   bfb *dest, const void *src,
-  int x, int y, bfb_pt *pt)
+  int x, int y, bfb_pt *pt, void *refcon)
 {
+  pnm_xfer_options *opts = (pnm_xfer_options *)refcon;
   const pnm_image *i = (const pnm_image*)src;
-  double luma = pnm_rgb_to_luma(src+(i->width*x+y)*3);
-  if ((double)(rand() % 100)/100.0 > (1.0 - luma))
-    bfb_pt_set(*pt);
+  const unsigned char *pixels = i->pixels;
+
+  if (pt->block == NULL)
+    return;
+
+  int offset = 3 * (y * i->width + x);
+  double luma, hue, sat;
+
+  rgb_to_luma_hue_saturation(
+    &pixels[offset], &luma, &hue, &sat,
+    opts->r_coeff, opts->g_coeff, opts->b_coeff);
+
+  if (sat >= opts->sat_thresh)
+    pt->block->sgr1 = hue_to_ansi_color(hue);
+
+  if (opts->luma_coeff * (rand() % 100)/100.0 > (1.0 - luma))
+    bfb_pt_set(pt);
   else
-    bfb_pt_reset(*pt);
+    bfb_pt_reset(pt);
 }
 
 /* END PNM stuff */
@@ -173,37 +243,56 @@ extern int main(int argc, char **argv) {
 
   bfb_fput(current_fb, stdout);
 
-  /* while(!done) { */
-  /*   for(x=0; x<width; x++) { */
-  /*     for(y=0; y<height; y++) { */
-  /*       int n = neighbors(current_fb, x, y); */
-  /*       if(bfb_isset(current_fb, x, y)) */
-  /*         bfb_plot(next_fb, x, y, (n == 2) || (n == 3)); */
-  /*       else */
-  /*         bfb_plot(next_fb, x, y, (n == 3)); */
-  /*     } */
-  /*   } */
-  /*   bfb_home(current_fb, stdout); */
-  /*   bfb_fput(current_fb, stdout); */
-  /*   fflush(stdout); */
+  while(!done) {
+    for(x=0; x<width; x++) {
+      for(y=0; y<height; y++) {
+        int n = neighbors(current_fb, x, y);
+        if(bfb_isset(current_fb, x, y))
+          bfb_plot(next_fb, x, y, (n == 2) || (n == 3));
+        else
+          bfb_plot(next_fb, x, y, (n == 3));
+      }
+    }
+    bfb_home(current_fb, stdout);
+    bfb_fput(current_fb, stdout);
+    fflush(stdout);
 
-  /*   temp_fb = current_fb; */
-  /*   current_fb = next_fb; */
-  /*   next_fb = temp_fb; */
-  /* } */
+    temp_fb = current_fb;
+    current_fb = next_fb;
+    next_fb = temp_fb;
+  }
 
-  pnm_image image = { MagickImage };
-  pnm_parse_header(&image);
-
-  if (strcmp(image.type, "P6") != 0)
+  int pnm_fd = open("demo.pnm", O_RDONLY);
+  if (pnm_fd < 0)
     return EXIT_FAILURE;
 
+  struct stat pnm_stat_buf;
+  if (fstat(pnm_fd, &pnm_stat_buf) < 0)
+    return EXIT_FAILURE;
+
+  unsigned char *pnm_bytes;
+  if ((pnm_bytes = mmap(0, pnm_stat_buf.st_size,
+                        PROT_READ, MAP_SHARED,
+                        pnm_fd, 0))
+      == MAP_FAILED)
+    return EXIT_FAILURE;
+  pnm_image image = {pnm_bytes};
+  pnm_parse_header(&image);
+
+  if (strcmp((const char *)image.type, "P6") != 0)
+    return EXIT_FAILURE;
+
+  double y_scale = (height * 0.9) / image.height;
+  double x_scale = y_scale * 1.25;
+  int image_y = (int)(height - image.height*y_scale) * 0.35;
+  int image_x = (int)(width - image.width*x_scale) * 0.5;
+  pnm_xfer_options opts = { 0.5, 0.8, 1.5, 1.0, 0.01};
   bfb_blit(
     current_fb, (const void *)&image,
-    0, 0,
+    image_x, image_y,
     pnm_xfer_fn,
-    24, image.width, image.height,
-    0.25, 0.25);
+    image.width, image.height,
+    x_scale, y_scale, &opts);
 
   bfb_home(current_fb, stdout);
   bfb_fput(current_fb, stdout);
@@ -212,12 +301,6 @@ extern int main(int argc, char **argv) {
   free_bfb(&fb2);
 
   fputs("\x1b[0m", stdout);
-
-  fprintf(
-    stdout,
-    "pnm type %s width %d height %d pnm %x pixels %x\n",
-    image.type, image.width, image.height,
-    image.bytes, image.pixels);
 
   return EXIT_SUCCESS;
 }
