@@ -20,15 +20,17 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+#include <fcntl.h>
 #include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 #include "bfb.h"
-#include "lenna.H"
 
 /* PNM stuff */
 
@@ -123,10 +125,16 @@ int hue_to_ansi_color(double hue_degs)
     return 31;
 }
 
+typedef struct pnm_xfer_options {
+  double r_coeff, g_coeff, b_coeff;
+  double luma_coeff, sat_thresh;
+} pnm_xfer_options;
+
 void pnm_xfer_fn(
   bfb *dest, const void *src,
-  int x, int y, bfb_pt *pt)
+  int x, int y, bfb_pt *pt, void *refcon)
 {
+  pnm_xfer_options *opts = (pnm_xfer_options *)refcon;
   const pnm_image *i = (const pnm_image*)src;
   const unsigned char *pixels = i->pixels;
 
@@ -135,11 +143,11 @@ void pnm_xfer_fn(
 
   rgb_to_luma_hue_saturation(
     &pixels[offset], &luma, &hue, &sat,
-    0.5, 0.9, 1.2);
-  if (sat >= 0.1)
+    opts->r_coeff, opts->g_coeff, opts->b_coeff);
+  if (sat >= opts->sat_thresh)
     pt->block->sgr1 = hue_to_ansi_color(hue);
 
-  if ((double)(rand() % 88)/100.0 > (1.0 - luma))
+  if (opts->luma_coeff * (rand() % 100)/100.0 > (1.0 - luma))
     bfb_pt_set(pt);
   else
     bfb_pt_reset(pt);
@@ -250,7 +258,21 @@ extern int main(int argc, char **argv) {
     next_fb = temp_fb;
   }
 
-  pnm_image image = { MagickImage };
+  int pnm_fd = open("demo.pnm", O_RDONLY);
+  if (pnm_fd < 0)
+    return EXIT_FAILURE;
+
+  struct stat pnm_stat_buf;
+  if (fstat(pnm_fd, &pnm_stat_buf) < 0)
+    return EXIT_FAILURE;
+
+  unsigned char *pnm_bytes;
+  if ((pnm_bytes = mmap(0, pnm_stat_buf.st_size,
+                        PROT_READ, MAP_SHARED,
+                        pnm_fd, 0))
+      == MAP_FAILED)
+    return EXIT_FAILURE;
+  pnm_image image = {pnm_bytes};
   pnm_parse_header(&image);
 
   if (strcmp((const char *)image.type, "P6") != 0)
@@ -266,13 +288,13 @@ extern int main(int argc, char **argv) {
   double x_scale = y_scale * 1.25;
   int image_y = 4;
   int image_x = width/2.0 - image.width*x_scale/2.0;
-
+  pnm_xfer_options opts = { 0.5, 0.8, 1.5, 1.0, 0.01};
   bfb_blit(
     current_fb, (const void *)&image,
     image_x, image_y,
     pnm_xfer_fn,
     image.width, image.height,
-    x_scale, y_scale);
+    x_scale, y_scale, &opts);
 
   bfb_home(current_fb, stdout);
   bfb_fput(current_fb, stdout);

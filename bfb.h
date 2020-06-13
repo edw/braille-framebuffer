@@ -72,7 +72,8 @@ void bfb_set_chunk_attrs(
 typedef void (*bfb_xfer_fn)(
   bfb *dest, const void *src,
   int bitmap_x, int bitmap_y,
-  bfb_pt *point);
+  bfb_pt *point,
+  void *refcon);
 
 extern void bfb_blit(
   bfb *dest, const void *src,
@@ -80,6 +81,6 @@ extern void bfb_blit(
   bfb_xfer_fn transfer_fn,
   unsigned int src_width,
   unsigned int src_height,
-  double x_scale, double y_scale);
+  double x_scale, double y_scale, void *refcon);
 
 #endif

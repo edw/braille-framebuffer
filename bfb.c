@@ -200,13 +200,12 @@ extern void bfb_blit(
   bfb_xfer_fn transfer_fn,
   unsigned int src_width,
   unsigned int src_height,
-  double x_scale, double y_scale)
+  double x_scale, double y_scale,
+  void *refcon)
 {
   int i, j;
   int w_steps = (int)((double)src_width * x_scale);
   int h_steps = (int)((double)src_height * y_scale);
-
-  /* fprintf(stderr, "wsteps %d hsteps %d\n", w_steps, h_steps); */
 
   for (i = 0; i < w_steps; i++) {
     for (j = 0; j < h_steps; j++) {
@@ -214,9 +213,7 @@ extern void bfb_blit(
       int src_y = (int)round((double)j / y_scale);
       bfb_pt current = {i + at_dest_x, j + at_dest_y};
       bfb_peek(dest, &current);
-      /* fprintf(stderr, "i,j (%d, %d) src (%d, %d) pt (%d, %d)\n", */
-      /*         i, j, src_x, src_y, current.x, current.y); */
-      transfer_fn(dest, src, src_x, src_y, &current);
+      transfer_fn(dest, src, src_x, src_y, &current, refcon);
     }
   }
 }
