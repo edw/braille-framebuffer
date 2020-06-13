@@ -138,12 +138,16 @@ void pnm_xfer_fn(
   const pnm_image *i = (const pnm_image*)src;
   const unsigned char *pixels = i->pixels;
 
+  if (pt->block == NULL)
+    return;
+
   int offset = 3 * (y * i->width + x);
   double luma, hue, sat;
 
   rgb_to_luma_hue_saturation(
     &pixels[offset], &luma, &hue, &sat,
     opts->r_coeff, opts->g_coeff, opts->b_coeff);
+
   if (sat >= opts->sat_thresh)
     pt->block->sgr1 = hue_to_ansi_color(hue);
 
@@ -278,16 +282,10 @@ extern int main(int argc, char **argv) {
   if (strcmp((const char *)image.type, "P6") != 0)
     return EXIT_FAILURE;
 
-  /* fprintf( */
-  /*   stderr, */
-  /*   "pnm type %s width %d height %d pnm %x pixels %x\n", */
-  /*   image.type, image.width, image.height, */
-  /*   image.bytes, image.pixels); */
-
   double y_scale = (height * 0.9) / image.height;
   double x_scale = y_scale * 1.25;
-  int image_y = 4;
-  int image_x = width/2.0 - image.width*x_scale/2.0;
+  int image_y = (int)(height - image.height*y_scale) * 0.35;
+  int image_x = (int)(width - image.width*x_scale) * 0.5;
   pnm_xfer_options opts = { 0.5, 0.8, 1.5, 1.0, 0.01};
   bfb_blit(
     current_fb, (const void *)&image,
