@@ -43,7 +43,7 @@ extern int init_bfb (
   return 0;
 }
 
-extern void free_bfb(bfb *b)
+extern void finalize_bfb(bfb *b)
 {
   free(b->blocks);
 }

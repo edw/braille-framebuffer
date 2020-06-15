@@ -283,7 +283,7 @@ extern int main(int argc, char **argv) {
     return EXIT_FAILURE;
 
   double y_scale = (height * 0.9) / image.height;
-  double x_scale = y_scale * 1.1;
+  double x_scale = y_scale * 1.3;
   int image_y = (int)(height - image.height*y_scale) * 0.35;
   int image_x = (int)(width - image.width*x_scale) * 0.5;
   pnm_xfer_options opts = { 0.5, 0.8, 1.5, 1.0, 0.01};
@@ -300,8 +300,8 @@ extern int main(int argc, char **argv) {
   bfb_home(current_fb, stdout);
   bfb_fput(current_fb, stdout);
 
-  free_bfb(&fb);
-  free_bfb(&fb2);
+  finalize_bfb(&fb);
+  finalize_bfb(&fb2);
 
   fputs("\x1b[0m", stdout);
 

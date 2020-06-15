@@ -34,7 +34,7 @@ typedef struct bfb_block {
 
 typedef struct bfb {
   bfb_block *blocks;
-  int width, height;
+  int width, height; /* dimensions are in blocks */
 } bfb;
 
 typedef struct bfb_pt {
@@ -54,7 +54,7 @@ int init_bfb(
   int dot_width, int dot_height,
   unsigned short default_block);
 
-void free_bfb(bfb *b);
+void finalize_bfb(bfb *b);
 void bfb_clear(bfb *b, unsigned short block_value);
 void bfb_home(bfb *b, FILE *fp);
 void bfb_fput(bfb *b, FILE *fp);
